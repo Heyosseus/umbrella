@@ -1,9 +1,48 @@
-import {Link, Head} from '@inertiajs/react';
+import {Head, Link} from '@inertiajs/react';
 import ViewIcon from '@/Icons/ViewIcon.jsx';
 import DeleteIcon from "@/Icons/DeleteIcon.jsx";
+import axios from "axios";
+import {useEffect, useState} from "react";
 
-export default function Products({auth, laravelVersion, phpVersion, products}) {
-    console.log(products)
+export default function Products({auth, products, categories}) {
+    const [selectedFilters, setSelectedFilters] = useState([]);
+    const [filteredItems, setFilteredItems] = useState(products);
+    let categoryItems = categories;
+    let deleteItem = (id) => {
+        axios.delete('/products/' + id).then((res) => {
+            setSelectedFilters([]);
+            document.getElementById('product-' + id).remove();
+        }).catch((err) => {
+        });
+    }
+
+    const handleFilter = (selectedCateogry) => {
+        if (selectedFilters.includes(selectedCateogry)) {
+            let filters = selectedFilters.filter((el) => el !== selectedCateogry);
+            setSelectedFilters(filters);
+        } else {
+            setSelectedFilters([...selectedFilters, selectedCateogry]);
+        }
+    }
+
+    useEffect(() => {
+        filterItems();
+    }, [selectedFilters])
+
+    const filterItems = () => {
+        if (selectedFilters.length > 0) {
+            let tempItems = selectedFilters.map((el) => {
+                let temp = products.filter((item) => item.categories.map((el) => el.name).includes(el.name));
+                console.log(temp, 'temp')
+                return temp;
+
+            });
+            setFilteredItems(tempItems.flat());
+            console.log(tempItems.flat(), 'tempItems')
+        } else {
+            setFilteredItems([...products]);
+        }
+    }
     return (
         <>
             <Head title="Products"/>
@@ -36,19 +75,36 @@ export default function Products({auth, laravelVersion, phpVersion, products}) {
                     )}
                 </div>
 
-                <div>
+                <div className='mt-28 flex flex-col'>
+                    <h1 className="text-5xl uppercase text-center mb-6 ">Products</h1>
+                    <div>
+                        {categoryItems.length > 0 ?
+                            <div className="flex gap-3 cursor-pointer justify-center">
+                                {categories.map((el, idx) => (
+                                    <p key={`filters-${idx}`}
+                                       onClick={() => handleFilter(el)}
+                                       className={`text-gray-600 dark:text-gray-400 rounded-xl text-lg ${selectedFilters?.includes(el) ? 'bg-gray-400' : 'bg-gray-200'} px-4 py-1`}>
+                                        {el.name}
+                                    </p>
+                                ))}
+                            </div>
+                            :
+                            <h1 className=" text-3xl uppercase">No categories yet.</h1>
+                        }
+                    </div>
                     {
-                        products.length > 0 ?
+                        filteredItems.length > 0 ?
                             <div className="mt-20 w-full flex flex-wrap justify-center">
-                                {products.map((el) => (
-                                    <div key={el.id}
+                                {filteredItems.map((el) => (
+                                    <div key={el.id} id={'product-' + el.id}
                                          className="relative flex flex-col w-1/3 px-10 py-6 items-start justify-center m-4 bg-white rounded-lg shadow-lg dark:bg-gray-800">
                                         <div className="flex gap-4">
                                             <img src={el.image} alt={el.name} className="w-44 h-40 rounded"/>
                                             <div className='space-y-4'>
                                                 <h1 className=" text-2xl font-semibold">{el.name}</h1>
                                                 <div className="flex gap-3">{el.categories.map((el) => (
-                                                    <p className="text-gray-600 dark:text-gray-400 rounded-xl text-lg bg-gray-200 px-4 py-1" key={el.id}>
+                                                    <p className="text-gray-600 dark:text-gray-400 rounded-xl text-lg bg-gray-200 px-4 py-1"
+                                                       key={el.id}>
                                                         {el.name}</p>
                                                 ))}
                                                 </div>
@@ -60,7 +116,9 @@ export default function Products({auth, laravelVersion, phpVersion, products}) {
                                                 <Link href={route('products.show', el.id)}>
                                                     <ViewIcon/>
                                                 </Link>
-                                                <DeleteIcon/>
+                                                <div className="cursor-pointer" onClick={() => deleteItem(el.id)}>
+                                                    <DeleteIcon/>
+                                                </div>
                                             </div>
 
 
@@ -77,17 +135,6 @@ export default function Products({auth, laravelVersion, phpVersion, products}) {
                     }
                 </div>
             </div>
-
-            <style>{`
-                .bg-dots-darker {
-                    background-image: url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(0,0,0,0.07)'/%3E%3C/svg%3E");
-                }
-                @media (prefers-color-scheme: dark) {
-                    .dark\\:bg-dots-lighter {
-                        background-image: url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(255,255,255,0.07)'/%3E%3C/svg%3E");
-                    }
-                }
-            `}</style>
         </>
     );
 }
