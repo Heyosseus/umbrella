@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -19,7 +20,11 @@ use Inertia\Inertia;
 
 Route::get('/', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
 Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

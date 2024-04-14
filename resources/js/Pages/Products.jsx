@@ -8,6 +8,9 @@ export default function Products({auth, products, categories}) {
     const [selectedFilters, setSelectedFilters] = useState([]);
     const [filteredItems, setFilteredItems] = useState(products);
     let categoryItems = categories;
+    console.log(products, 'products')
+    const imageUrls = products.flatMap((el) => JSON.parse(el.image));
+    console.log(imageUrls, 'imageUrls')
     let deleteItem = (id) => {
         axios.delete('/products/' + id).then((res) => {
             setSelectedFilters([]);
@@ -27,6 +30,7 @@ export default function Products({auth, products, categories}) {
 
     useEffect(() => {
         filterItems();
+        updateQueryParams();
     }, [selectedFilters])
 
     const filterItems = () => {
@@ -42,6 +46,12 @@ export default function Products({auth, products, categories}) {
         } else {
             setFilteredItems([...products]);
         }
+    }
+    const updateQueryParams = () => {
+        const queryParams = new URLSearchParams();
+        selectedFilters.forEach((id) => queryParams.append('categories[]', id));
+        const url = `${window.location.pathname}?${queryParams.toString()}`;
+        window.history.pushState({}, '', url);
     }
     return (
         <>
@@ -97,9 +107,12 @@ export default function Products({auth, products, categories}) {
                             <div className="mt-20 w-full flex flex-wrap justify-center">
                                 {filteredItems.map((el) => (
                                     <div key={el.id} id={'product-' + el.id}
-                                         className="relative flex flex-col w-1/3 px-10 py-6 items-start justify-center m-4 bg-white rounded-lg shadow-lg dark:bg-gray-800">
-                                        <div className="flex gap-4">
-                                            <img src={el.image} alt={el.name} className="w-44 h-40 rounded"/>
+                                         className="relative flex flex-col px-10 py-6 items-start justify-center m-4 bg-white rounded-lg shadow-lg dark:bg-gray-800">
+                                        <div className="flex gap-4 w-1/2">
+                                            {JSON.parse(el.image).map((img, idx) => (
+                                                <img key={idx} src={img} alt="" className='w-40 h-40'/>
+                                            ))}
+
                                             <div className='space-y-4'>
                                                 <h1 className=" text-2xl font-semibold">{el.name}</h1>
                                                 <div className="flex gap-3">{el.categories.map((el) => (

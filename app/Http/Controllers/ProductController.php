@@ -26,6 +26,33 @@ class ProductController extends Controller
         ]));
     }
 
+    public function store(Request $request)
+    {
+        $attributes = $request->validate([
+            'name' => 'required',
+            'description' => 'required',
+            'price' => 'required',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $product = Product::create($request->only('name', 'description', 'price'));
+
+        $imageUrls = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $filename = $image->getClientOriginalName();
+                $path = $image->storeAs('public/images', $filename);
+                $relativePath = str_replace('public', 'storage', $path);
+                $imageUrls[] = $relativePath;
+            }
+        }
+        $product->update(['image' => json_encode($imageUrls)]);  // Store the image URLs in the 'images' column
+
+        $product->categories()->attach($request->categories);
+
+        return redirect()->route('products.index');
+    }
+
     public function show(Product $product) : \Inertia\Response
     {
         return Inertia::render('ProductItem', [
