@@ -8,9 +8,8 @@ export default function Products({auth, products, categories}) {
     const [selectedFilters, setSelectedFilters] = useState([]);
     const [filteredItems, setFilteredItems] = useState(products);
     let categoryItems = categories;
-    console.log(products, 'products')
     const imageUrls = products.flatMap((el) => JSON.parse(el.image));
-    console.log(imageUrls, 'imageUrls')
+
     let deleteItem = (id) => {
         axios.delete('/products/' + id).then((res) => {
             setSelectedFilters([]);
@@ -35,18 +34,20 @@ export default function Products({auth, products, categories}) {
 
     const filterItems = () => {
         if (selectedFilters.length > 0) {
-            let tempItems = selectedFilters.map((el) => {
-                let temp = products.filter((item) => item.categories.map((el) => el.name).includes(el.name));
-                console.log(temp, 'temp')
-                return temp;
-
+            let tempItems = [];
+            selectedFilters.forEach((el) => {
+                let filteredByCategory = products.filter((item) => item.categories.map((cat) => cat.name).includes(el.name));
+                filteredByCategory.forEach((item) => {
+                    if (!tempItems.some((tempItem) => tempItem.id === item.id)) {
+                        tempItems.push(item);
+                    }
+                });
             });
-            setFilteredItems(tempItems.flat());
-            console.log(tempItems.flat(), 'tempItems')
+            setFilteredItems(tempItems);
         } else {
             setFilteredItems([...products]);
         }
-    }
+    };
     const updateQueryParams = () => {
         const queryParams = new URLSearchParams();
         selectedFilters.forEach((id) => queryParams.append('categories[]', id));
@@ -88,28 +89,25 @@ export default function Products({auth, products, categories}) {
                 <div className='mt-28 flex flex-col'>
                     <h1 className="text-5xl uppercase text-center mb-6 ">Products</h1>
                     <div>
-                        {categoryItems.length > 0 ?
-                            <div className="flex gap-3 cursor-pointer justify-center">
-                                {categories.map((el, idx) => (
-                                    <p key={`filters-${idx}`}
-                                       onClick={() => handleFilter(el)}
-                                       className={`text-gray-600 dark:text-gray-400 rounded-xl text-lg ${selectedFilters?.includes(el) ? 'bg-gray-400' : 'bg-gray-200'} px-4 py-1`}>
-                                        {el.name}
-                                    </p>
-                                ))}
-                            </div>
-                            :
-                            <h1 className=" text-3xl uppercase">No categories yet.</h1>
-                        }
+                        <div className="flex gap-3 cursor-pointer justify-center">
+                            {categories.map((el, idx) => (
+                                <p key={`filters-${idx}`}
+                                   onClick={() => handleFilter(el)}
+                                   className={`text-gray-600 dark:text-gray-400 rounded-xl text-lg ${selectedFilters?.includes(el) ? 'bg-gray-400' : 'bg-gray-200'} px-4 py-1`}>
+                                    {el.name}
+                                </p>
+                            ))}
+                        </div>
+
                     </div>
                     {
                         filteredItems.length > 0 ?
-                            <div className="mt-20 w-full flex flex-wrap justify-center">
+                            <div className="mt-10 w-full flex flex-wrap justify-center">
                                 {filteredItems.map((el) => (
                                     <div key={el.id} id={'product-' + el.id}
                                          className="relative flex flex-col px-10 py-6 items-start justify-center m-4 bg-white rounded-lg shadow-lg dark:bg-gray-800">
                                         <div className="flex gap-4 w-1/2">
-                                            {JSON.parse(el.image).map((img, idx) => (
+                                            {JSON.parse(el.image).slice(0, 2).map((img, idx) => (
                                                 <img key={idx} src={img} alt="" className='w-40 h-40'/>
                                             ))}
 
@@ -143,7 +141,7 @@ export default function Products({auth, products, categories}) {
                                 ))}
                             </div>
                             :
-                            <h1 className=" text-3xl uppercase">No products yet.</h1>
+                            <h1 className=" text-3xl uppercase text-center mt-6">No products yet.</h1>
 
                     }
                 </div>

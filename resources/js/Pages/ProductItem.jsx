@@ -1,7 +1,10 @@
 import {Link, Head} from '@inertiajs/react';
 
 export default function Products({auth, product}) {
-    console.log(product)
+
+    console.log(product.image)
+    const images = JSON.parse(product.image);
+    console.log(images)
     return (
         <>
             <Head title="Product item"/>
@@ -25,16 +28,21 @@ export default function Products({auth, product}) {
 
                 </div>
 
-                <div className="w-full flex gap-10 flex-wrap justify-center">
+                <div className="w-full flex gap-10 flex-wrap items-center justify-center">
                     <h1 className="text-5xl uppercase mt-40 ">Product Item</h1>
                     <div
                         className="flex flex-col w-1/2 p-12 items-start justify-center m-4 bg-white rounded-lg shadow-lg dark:bg-gray-800">
-                        <div className="flex gap-10">
-                            <img src={product.image} alt={product.name} className="w-80 h-64 rounded"/>
+                        <div className={`flex gap-10 ${images.length > 2 ? 'flex-col' : ''}`}>
+                            <div className='flex gap-1  flex-row flex-wrap'>
+                                {Array.isArray(images) && images.map((img) =>
+                                    <img src={img.startsWith('http') ? img : `http://127.0.0.1:8000/${img}`} alt="" className='w-44 h-40 rounded'/>
+                                )}
+                            </div>
+
                             <div className='space-y-5'>
                                 <h1 className=" text-4xl font-semibold">{product.name}</h1>
                                 <div className="flex gap-3">{product.categories.map((el) => (
-                                    <p className="text-gray-600 dark:text-gray-400 rounded-xl text-xl bg-gray-200 px-6 py-2">
+                                    <p key={el.id} className="text-gray-600 dark:text-gray-400 rounded-xl text-xl bg-gray-200 px-6 py-2">
                                         {el.name}</p>
                                 ))}
                                 </div>
