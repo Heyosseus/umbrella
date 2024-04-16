@@ -1,6 +1,6 @@
-# **Introduction*
+# **Introduction**
 
-Application is built with laravel, inertia and react.js
+Application is built with Laravel, inertia, and react.js
 
 # **Getting Started**
 
