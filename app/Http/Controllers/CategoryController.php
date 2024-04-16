@@ -11,4 +11,13 @@ class CategoryController extends Controller
     {
         return Category::all();
     }
+
+    public function store(Request $request)
+    {
+        $attributes = $request->validate([
+            'name' => 'required',
+        ]);
+
+        return Category::create($attributes);
+    }
 }

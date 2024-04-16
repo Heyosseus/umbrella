@@ -24,6 +24,7 @@ Route::post('/products', [ProductController::class, 'store'])->name('products.st
 Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

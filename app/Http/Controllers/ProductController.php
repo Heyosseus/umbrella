@@ -15,7 +15,7 @@ class ProductController extends Controller
     public function index() : \Inertia\Response
     {
         $products = Product::with('categories')->get();
-        $categories = Category::limit(5)->get();
+        $categories = Category::all();
 
         return Inertia::render('Products', array_merge([
             'products' => $products,
