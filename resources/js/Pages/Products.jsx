@@ -7,8 +7,10 @@ import {useEffect, useState} from "react";
 export default function Products({auth, products, categories}) {
     const [selectedFilters, setSelectedFilters] = useState([]);
     const [filteredItems, setFilteredItems] = useState(products);
-    let categoryItems = categories;
-    const imageUrls = products.flatMap((el) => JSON.parse(el.image));
+    const [sort, setSort] = useState('asc');
+    const [colName, setColName] = useState('name');
+
+
 
     let deleteItem = (id) => {
         axios.delete('/products/' + id).then((res) => {
@@ -29,31 +31,36 @@ export default function Products({auth, products, categories}) {
 
     useEffect(() => {
         filterItems();
-        updateQueryParams();
-    }, [selectedFilters])
+    }, [selectedFilters, sort, colName]);
 
     const filterItems = () => {
-        if (selectedFilters.length > 0) {
-            let tempItems = [];
-            selectedFilters.forEach((el) => {
-                let filteredByCategory = products.filter((item) => item.categories.map((cat) => cat.name).includes(el.name));
-                filteredByCategory.forEach((item) => {
-                    if (!tempItems.some((tempItem) => tempItem.id === item.id)) {
-                        tempItems.push(item);
-                    }
-                });
-            });
-            setFilteredItems(tempItems);
+        let tempItems = [...products];
+
+        selectedFilters.forEach((selectedCategory) => {
+            tempItems = tempItems.filter((item) => item.categories.some((category) => category.id === selectedCategory.id));
+        });
+
+        tempItems.sort((a, b) => {
+            if (sort === 'asc') {
+                return a[colName] > b[colName] ? 1 : -1;
+            } else {
+                return a[colName] < b[colName] ? 1 : -1;
+            }
+        });
+
+        setFilteredItems(tempItems);
+    };
+
+    const sortByColumn = (columnName) => {
+        if (columnName === colName) {
+            setSort(sort === 'asc' ? 'desc' : 'asc');
+            console.log(sort)
         } else {
-            setFilteredItems([...products]);
+            setColName(columnName);
+            setSort('asc');
         }
     };
-    const updateQueryParams = () => {
-        const queryParams = new URLSearchParams();
-        selectedFilters.forEach((id) => queryParams.append('categories[]', id));
-        const url = `${window.location.pathname}?${queryParams.toString()}`;
-        window.history.pushState({}, '', url);
-    }
+
     return (
         <>
             <Head title="Products"/>
@@ -102,48 +109,55 @@ export default function Products({auth, products, categories}) {
                     </div>
                     {
                         filteredItems.length > 0 ?
-                            <div className="mt-10 w-full flex flex-wrap justify-center">
-                                {filteredItems.map((el) => (
-                                    <div key={el.id} id={'product-' + el.id}
-                                         className="relative flex flex-col px-10 py-6 items-start justify-center m-4 bg-white rounded-lg shadow-lg dark:bg-gray-800">
-                                        <div className="flex gap-4 w-1/2">
-                                            {JSON.parse(el.image).slice(0, 2).map((img, idx) => (
-                                                <img key={idx} src={img} alt="" className='w-40 h-40'/>
-                                            ))}
-
-                                            <div className='space-y-4'>
-                                                <h1 className=" text-2xl font-semibold">{el.name}</h1>
-                                                <div className="flex gap-3">{el.categories.map((el) => (
-                                                    <p className="text-gray-600 dark:text-gray-400 rounded-xl text-lg bg-gray-200 px-4 py-1"
-                                                       key={el.id}>
-                                                        {el.name}</p>
+                            <div className="mt-10 w-full">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                    <tr>
+                                        <th
+                                            className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                            onClick={() => sortByColumn('name')}
+                                        >
+                                            Name
+                                        </th>
+                                        <th
+                                            className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                        >
+                                            Categories
+                                        </th>
+                                        <th
+                                            className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                            onClick={() => sortByColumn('price')}
+                                        >
+                                            Price
+                                        </th>
+                                        <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredItems.map((el) => (
+                                        <tr key={el.id}>
+                                            <td className="px-6 py-4 whitespace-nowrap">{el.name}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {el.categories.map((cat) => (
+                                                    <span key={cat.id} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2">{cat.name}</span>
                                                 ))}
-                                                </div>
-                                                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                                                    <strong>Price: </strong>${el.price}</p>
-                                            </div>
-
-                                            <div className="flex gap-2 absolute top-6 right-3">
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">${el.price}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 <Link href={route('products.show', el.id)}>
-                                                    <ViewIcon/>
+                                                    <a className="text-blue-600 hover:text-blue-900">View</a>
                                                 </Link>
-                                                <div className="cursor-pointer" onClick={() => deleteItem(el.id)}>
-                                                    <DeleteIcon/>
-                                                </div>
-                                            </div>
-
-
-                                        </div>
-                                        <p className="mt-2 text-gray-600 dark:text-gray-400 text-xl">
-                                            <strong>Description: </strong>{el.description.length > 30 ? el.description.substring(0, 30) + '...' : el.description}
-                                        </p>
-                                    </div>
-                                ))}
+                                                <button className="text-red-600 hover:text-red-900 ml-2" onClick={() => deleteItem(el.id)}>Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
                             </div>
                             :
-                            <h1 className=" text-3xl uppercase text-center mt-6">No products yet.</h1>
-
+                            <h1 className="text-3xl uppercase text-center mt-6">No products yet.</h1>
                     }
+
                 </div>
             </div>
         </>

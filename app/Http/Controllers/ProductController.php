@@ -12,7 +12,7 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function index() : \Inertia\Response
+    public function index(): \Inertia\Response
     {
         $products = Product::with('categories')->get();
         $categories = Category::all();
@@ -53,14 +53,14 @@ class ProductController extends Controller
         return redirect()->route('products.index');
     }
 
-    public function show(Product $product) : \Inertia\Response
+    public function show(Product $product): \Inertia\Response
     {
         return Inertia::render('ProductItem', [
             'product' => $product->load('categories'),
         ]);
     }
 
-    public function destroy($product) : void
+    public function destroy($product): void
     {
         $product = Product::findOrFail($product);
         $product->delete();
