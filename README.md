@@ -66,5 +66,5 @@ php artisan db:seed
 Start the development server:
 
 ```sh
-npm run serve
+php artisan serve
 ```
