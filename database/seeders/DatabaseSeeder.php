@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         \App\Models\Category::factory(6)->create();
 
-        \App\Models\Product::factory(10)->create()->each(function ($product) {
+        \App\Models\Product::factory(1000)->create()->each(function ($product) {
             $categories = \App\Models\Category::inRandomOrder()->limit(rand(1, 3))->get();
             $product->categories()->attach($categories);
         });
